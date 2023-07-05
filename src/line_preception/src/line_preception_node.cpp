@@ -12,8 +12,17 @@ int main(int argc, char **argv){
 
 void LINE_PRECEPTION::init(ros::NodeHandle &nh){
 
-    std::thread rtk_thread(&LINE_PRECEPTION::readCam, this);
-    rtk_thread.detach();  
+  imageTimer = nh.createTimer(ros::Duration(0.1), &LINE_PRECEPTION::imageCallback, this);
+  image_transport::ImageTransport it(nh);
+  cam_pub = it.advertise("camera", 10);
+
+  std::thread rtk_thread(&LINE_PRECEPTION::readCam, this);
+  rtk_thread.detach();  
+}
+
+
+void LINE_PRECEPTION::imageCallback(const ros::TimerEvent &e){
+  cam_pub.publish(image);
 }
 
 
@@ -27,7 +36,7 @@ void LINE_PRECEPTION::readCam(){
     std::cout<<"open camera success!"<<std::endl;
   }  
   bool isSuccess = true;
-  ros::Rate loop_rate(30);
+  //ros::Rate loop_rate(30);
   while(ros::ok()){
     isSuccess = cap.read(frame);
     if(!isSuccess)//if the video ends, then break
@@ -35,9 +44,10 @@ void LINE_PRECEPTION::readCam(){
         std::cout<<"video ends"<<std::endl;
         break;
     }
-    cv::imshow("Video Frame", frame);
-    cv::waitKey(1);
-    loop_rate.sleep();
+    image = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
+    // cv::imshow("Video Frame", frame);
+    // cv::waitKey(0);
+    //loop_rate.sleep();
   }
 }
 

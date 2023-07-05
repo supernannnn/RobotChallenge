@@ -14,7 +14,14 @@ private:
 
     //控制指令发布
     ros::Publisher cmd_pub;
-    ros::Publisher cam_pub; //just for rosbag record
+
+
+    /***just for rosbag record***/
+    image_transport::Publisher cam_pub; 
+    sensor_msgs::ImagePtr image;
+    ros::Timer imageTimer;
+    void imageCallback(const ros::TimerEvent &e);
+    /****************************/
 
 
     //相机流
