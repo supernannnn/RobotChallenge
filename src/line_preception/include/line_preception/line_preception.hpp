@@ -6,15 +6,12 @@
 #include "opencv2/opencv.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
-#include <thread>
-
 
 class LINE_PRECEPTION{
 private:
 
     //控制指令发布
     ros::Publisher cmd_pub;
-
 
     /***just for rosbag record***/
     image_transport::Publisher cam_pub; 
@@ -23,11 +20,12 @@ private:
     void imageCallback(const ros::TimerEvent &e);
     /****************************/
 
-
     //相机流
+    cv::VideoCapture cap;
     cv::Mat frame;
 
-    void readCam();
+    //相机初始化
+    void camInit();
 
 public:
     LINE_PRECEPTION(/* args */){

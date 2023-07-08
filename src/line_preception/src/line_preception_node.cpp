@@ -11,23 +11,28 @@ int main(int argc, char **argv){
 }
 
 void LINE_PRECEPTION::init(ros::NodeHandle &nh){
-
+  camInit();
   imageTimer = nh.createTimer(ros::Duration(0.1), &LINE_PRECEPTION::imageCallback, this);
   image_transport::ImageTransport it(nh);
-  cam_pub = it.advertise("camera", 10);
-
-  std::thread rtk_thread(&LINE_PRECEPTION::readCam, this);
-  rtk_thread.detach();  
+  cam_pub = it.advertise("image", 10);
 }
 
 
 void LINE_PRECEPTION::imageCallback(const ros::TimerEvent &e){
+  
+  bool isSuccess = cap.read(frame);
+  if(!isSuccess)//if the video ends, then break
+  {
+      std::cout<<"video ends"<<std::endl;
+  }
+  image = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
   cam_pub.publish(image);
 }
 
 
-void LINE_PRECEPTION::readCam(){
-  cv::VideoCapture cap(0);//open video from the path
+
+void LINE_PRECEPTION::camInit(){
+  cap.open(0);//open video from the path
   if(!cap.isOpened()){
     std::cout<<"open video failed!"<<std::endl;
     return;
@@ -35,20 +40,6 @@ void LINE_PRECEPTION::readCam(){
   else{
     std::cout<<"open camera success!"<<std::endl;
   }  
-  bool isSuccess = true;
-  //ros::Rate loop_rate(30);
-  while(ros::ok()){
-    isSuccess = cap.read(frame);
-    if(!isSuccess)//if the video ends, then break
-    {
-        std::cout<<"video ends"<<std::endl;
-        break;
-    }
-    image = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
-    // cv::imshow("Video Frame", frame);
-    // cv::waitKey(0);
-    //loop_rate.sleep();
-  }
 }
 
 
