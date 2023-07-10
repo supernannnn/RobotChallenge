@@ -4,21 +4,22 @@
     <remap from="~odom"      to="odometryTopic"/>
 
     <!-- 规划器参数 -->
-    <param name="planning/vel"       value="2.0"  />
+    <param name="planning/vel"       value="0.5"  />
     <param name="planning/acc"       value="2.0"  />
     <param name="planning/dev_order" value="4"    />
     <param name="planning/min_order" value="3"    />
-    <param name="vis/vis_traj_width" value="0.15" />
+    <param name="vis/vis_traj_width" value="0.05" />
 
     <!-- 参考柱子坐标 -->
-    <param name="planning/pillar1_x" value="3" />
-    <param name="planning/pillar1_y" value="0" />
-    <param name="planning/pillar1_z" value="1.5" />
+    <param name="pillar1_x" value="2.0" type="double" />
+    <param name="pillar1_y" value="0.0" type="double" />
+    <param name="pillar1_z" value="1.5" type="double" />
 
-    <param name="planning/pillar2_x" value="5" />
-    <param name="planning/pillar2_y" value="0" />
-    <param name="planning/pillar2_z" value="1.5" />
+    <param name="pillar2_x" value="7.0" type="double" />
+    <param name="pillar2_y" value="0.0" type="double" />
+    <param name="pillar2_z" value="1.5" type="double" />
 
+    <!-- 控制超前参数 -->
     <param name="time_forward" value="1.0" type="double" />
 
   </node>

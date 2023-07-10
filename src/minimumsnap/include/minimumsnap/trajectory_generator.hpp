@@ -34,6 +34,7 @@
 
 #include <visual_utils/planning_visualization.hpp>
 
+#include <tf/transform_broadcaster.h>
 
 using namespace std;
 using namespace Eigen;
@@ -81,18 +82,24 @@ private:
     Vector3d _endAcc    = Vector3d::Zero();
 
     //参考柱子坐标
-    Vector3d pillar1    = Vector3d::Zero();
-    Vector3d pillar2    = Vector3d::Zero();
+    Eigen::Vector3d pillar1    = Vector3d::Zero();
+    Eigen::Vector3d pillar2    = Vector3d::Zero();
 
     ros::Timer ControlCmdCallback_Timer;
+    ros::Timer Transformer_Timer;
+    tf::TransformBroadcaster broadcaster;
 
 
     MiniSnapTraj Traj;
     vector<Eigen::Vector3d> traj;
+    vector<Eigen::Vector3d> waypoints_visual;
     PlanningVisualization::Ptr trajVisual_;
     nav_msgs::Path trajPath;
     ros::Publisher trajPath_pub;
     ros::Publisher controlCmd_pub;
+    ros::Subscriber odom_sub;
+    Eigen::Vector3d odom_pos;
+    bool has_odom;
     quadrotor_msgs::PositionCommand posiCmd;
 
     bool is_complete_Traj;
@@ -122,10 +129,16 @@ private:
    
     void ControlCmdCallback(const ros::TimerEvent &e);
 
+    void OdomCallback(const nav_msgs::OdometryConstPtr msg);
+
+    /*TF树坐标变换关系*/
+    void TransformerCallback(const ros::TimerEvent &e);
+
 
 public:
     TRAJECTORY_GENERATOR(/* argvs */){
         is_complete_Traj = false;
+        has_odom = false;
     }
     ~TRAJECTORY_GENERATOR(){
 

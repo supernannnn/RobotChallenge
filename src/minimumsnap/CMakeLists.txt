@@ -21,13 +21,14 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   visual_utils
+  tf
 )
 
 find_package(Eigen3 REQUIRED)
 set(Eigen3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 
 catkin_package(
-  CATKIN_DEPENDS  visual_utils 
+  CATKIN_DEPENDS  visual_utils tf
 )
 
 

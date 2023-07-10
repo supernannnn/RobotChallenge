@@ -16,7 +16,16 @@ using std::vector;
 class PlanningVisualization{
 private:
 
+    //可视化显示类型
+    enum VISUAL_TYPE{
+        LINE = 0,
+        SPHERE,
+        PILLAR,
+    };
+
     ros::Publisher traj_pub;
+    ros::Publisher waypoints_pub;
+    ros::Publisher pillars_pub;
 
 
 public:
@@ -29,10 +38,13 @@ public:
     void displayMarkerList( ros::Publisher &pub, 
                             const vector<Eigen::Vector3d> &list, 
                             double scale,
-                            Eigen::Vector4d color, int id,  
-                            bool show_sphere = true);
+                            Eigen::Vector4d color, 
+                            int id,  
+                            int type);
 
-    void displayOptimalList(vector<Eigen::Vector3d> list, int id);
+    void displayTraj(vector<Eigen::Vector3d> list);
+    void displayWaypoints(vector<Eigen::Vector3d> list);
+    void displayPillars(vector<Eigen::Vector3d> list);
 
 };
 
