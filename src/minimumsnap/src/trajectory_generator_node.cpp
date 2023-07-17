@@ -91,43 +91,43 @@ void TRAJECTORY_GENERATOR::GetWaypoints(){
 
     pt.pose.position.x = pillar1(0) - 1.5;
     pt.pose.position.y = pillar1(1);
-    pt.pose.position.z = 1.5;
+    pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
     pt.pose.position.x = pillar1(0);
-    pt.pose.position.y = pillar1(1) + 1.5;
-    pt.pose.position.z = 1.5;
+    pt.pose.position.y = pillar1(1) + 1;
+    pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
     pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
     pt.pose.position.y = pillar1(1);
-    pt.pose.position.z = 1.5;
+    pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = pillar2(0);
-    pt.pose.position.y = pillar2(1) - 1.5;
-    pt.pose.position.z = 1.5;
-    waypoints.poses.push_back(pt);
+    // pt.pose.position.x = pillar2(0);
+    // pt.pose.position.y = pillar2(1) - 1.5;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = pillar2(0) + 1.5;
-    pt.pose.position.y = pillar2(1);
-    pt.pose.position.z = 1.5;
-    waypoints.poses.push_back(pt);
+    // pt.pose.position.x = pillar2(0) + 1.5;
+    // pt.pose.position.y = pillar2(1);
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = pillar2(0);
-    pt.pose.position.y = pillar2(1) + 1.5;
-    pt.pose.position.z = 1.5;
-    waypoints.poses.push_back(pt);
+    // pt.pose.position.x = pillar2(0);
+    // pt.pose.position.y = pillar2(1) + 1.5;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
 
-    pt.pose.position.x =(pillar1(0) + pillar2(0)) / 2;
-    pt.pose.position.y = pillar1(1);
-    pt.pose.position.z = 1.5;
-    waypoints.poses.push_back(pt);
+    // pt.pose.position.x =(pillar1(0) + pillar2(0)) / 2;
+    // pt.pose.position.y = pillar1(1);
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = pillar1(0);
-    pt.pose.position.y = pillar1(1) - 1.5;
-    pt.pose.position.z = 1.5;
-    waypoints.poses.push_back(pt); 
+    // pt.pose.position.x = pillar1(0);
+    // pt.pose.position.y = pillar1(1) - 1.5;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt); 
 
     waypointsCallback(waypoints);  
 
@@ -177,9 +177,7 @@ void TRAJECTORY_GENERATOR::trajGeneration(Eigen::MatrixXd& path){
     _polyTime  = timeAllocation(path);
     // generate a minimum-jerk/snap piecewise monomial polynomial-based trajectory
     _polyCoeff = trajectoryGeneratorWaypoint.PolyQPGeneration(_dev_order, path, vel, acc, _polyTime);
-    
     Traj = MiniSnapTraj(time_start, _polyTime, _polyCoeff);
-
     ros::Time time_end = ros::Time::now();
     ROS_WARN("Time consumed in trajectory generation is %f ms", (time_end - time_start).toSec() * 1000.0); 
     ROS_WARN("The duration of trajectory is %f s", Traj.time_duration); 
@@ -217,7 +215,7 @@ void TRAJECTORY_GENERATOR::getVisual(Eigen::MatrixXd& polyCoeff, Eigen::VectorXd
         trajPath.poses.push_back(poses);
         traj.push_back(cur);
         trajPath_pub.publish(trajPath);
-        if (count % 100 == 0) traj_len += (pre - cur).norm();
+        if (count % 1000 == 0) traj_len += (pre - cur).norm();
         pre = cur;
         loop_rate.sleep();
     }
@@ -243,6 +241,7 @@ Eigen::VectorXd TRAJECTORY_GENERATOR::timeAllocation(Eigen::MatrixXd& Path){
 std::pair<Eigen::Vector3d, Eigen::Vector3d>  TRAJECTORY_GENERATOR::getTrajInfo(const MiniSnapTraj& traj, double time){
     int     traj_id;
     double  t;
+    //判断当前时间处于哪段轨迹当中
     for (int i = 0; i < traj.traj_nums; i++){
         if (time <= traj.poly_time(i)){
             traj_id = i;

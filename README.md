@@ -21,3 +21,20 @@ When using VScode to read code, you need to install the ROS and C/C++ extensions
 ```
 
 Then you can enjoy reading the code and use some common navigation operations to read more efficiently.
+
+# Running on a real quadrotor
+
+```bash
+cd RobotChalllenge			 #enter workspace
+sh ./launch.sh				 #open t265 & mavros
+
+#open a new terminal & cd RobotChalllenge
+roslaunch px4ctrl run_ctrl.launch
+
+#open a new terminal & cd RobotChalllenge
+sh ./takeoff.sh				#At this point, the drone will hover at the altitude you have set.
+
+#open a new terminal & cd RobotChalllenge
+roslaunch minimumsnap fly.launch	#Eight-figure trajectory tracking
+```
+

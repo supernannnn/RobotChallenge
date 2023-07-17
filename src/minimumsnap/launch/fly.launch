@@ -1,10 +1,10 @@
 <launch>
 
   <node pkg="minimumsnap" type="trajectory_generator_node" name="trajectory_generator_node" output="screen" required = "true">
-    <remap from="~odom"      to="odometryTopic"/>
+    <remap from="~odom"      to="/fusion/odom"/>
 
     <!-- 规划器参数 -->
-    <param name="planning/vel"       value="0.5"  />
+    <param name="planning/vel"       value="2"  />
     <param name="planning/acc"       value="2.0"  />
     <param name="planning/dev_order" value="4"    />
     <param name="planning/min_order" value="3"    />
@@ -12,12 +12,12 @@
 
     <!-- 参考柱子坐标 -->
     <param name="pillar1_x" value="2.0" type="double" />
-    <param name="pillar1_y" value="0.0" type="double" />
-    <param name="pillar1_z" value="1.5" type="double" />
+    <param name="pillar1_y" value="0.0" type="double" /> 
+    <param name="pillar1_z" value="1" type="double" />
 
-    <param name="pillar2_x" value="7.0" type="double" />
+    <param name="pillar2_x" value="4.0" type="double" />
     <param name="pillar2_y" value="0.0" type="double" />
-    <param name="pillar2_z" value="1.5" type="double" />
+    <param name="pillar2_z" value="1" type="double" />
 
     <!-- 控制超前参数 -->
     <param name="time_forward" value="1.0" type="double" />
