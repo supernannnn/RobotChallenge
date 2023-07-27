@@ -89,33 +89,33 @@ void TRAJECTORY_GENERATOR::GetWaypoints(){
     geometry_msgs::PoseStamped pt;
     pt.pose.orientation = tf::createQuaternionMsgFromYaw(0.0);
 
-    pt.pose.position.x = pillar1(0) - 1.5;
-    pt.pose.position.y = pillar1(1);
-    pt.pose.position.z = 1;
-    waypoints.poses.push_back(pt);
-
-    pt.pose.position.x = pillar1(0);
-    pt.pose.position.y = pillar1(1) + 1;
-    pt.pose.position.z = 1;
-    waypoints.poses.push_back(pt);
-
-    pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
-    pt.pose.position.y = pillar1(1);
-    pt.pose.position.z = 1;
-    waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = pillar2(0);
-    // pt.pose.position.y = pillar2(1) - 1.5;
+    // pt.pose.position.x = pillar1(0) - 0.5;
+    // pt.pose.position.y = pillar1(1);
     // pt.pose.position.z = 1;
     // waypoints.poses.push_back(pt);
 
-    // pt.pose.position.x = pillar2(0) + 1.5;
+    // pt.pose.position.x = pillar1(0);
+    // pt.pose.position.y = pillar1(1) + 0.5;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
+    // pt.pose.position.y = pillar1(1);
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar2(0);
+    // pt.pose.position.y = pillar2(1) - 0.5;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar2(0) + 0.5;
     // pt.pose.position.y = pillar2(1);
     // pt.pose.position.z = 1;
     // waypoints.poses.push_back(pt);
 
     // pt.pose.position.x = pillar2(0);
-    // pt.pose.position.y = pillar2(1) + 1.5;
+    // pt.pose.position.y = pillar2(1) + 0.5;
     // pt.pose.position.z = 1;
     // waypoints.poses.push_back(pt);
 
@@ -125,9 +125,46 @@ void TRAJECTORY_GENERATOR::GetWaypoints(){
     // waypoints.poses.push_back(pt);
 
     // pt.pose.position.x = pillar1(0);
-    // pt.pose.position.y = pillar1(1) - 1.5;
+    // pt.pose.position.y = pillar1(1) - 0.5;
     // pt.pose.position.z = 1;
     // waypoints.poses.push_back(pt); 
+
+
+    pt.pose.position.x = 1;
+    pt.pose.position.y = 0;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt);
+
+    pt.pose.position.x = 1.5;
+    pt.pose.position.y = -0.5;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt);
+
+    pt.pose.position.x = 2;
+    pt.pose.position.y = -1;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt);
+
+    pt.pose.position.x = 3;
+    pt.pose.position.y = 0;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt);
+
+    pt.pose.position.x = 2;
+    pt.pose.position.y = 1;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt);
+
+
+    pt.pose.position.x = 1;
+    pt.pose.position.y = 0;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt);
+
+    pt.pose.position.x = 2;
+    pt.pose.position.y = -1;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt);
 
     waypointsCallback(waypoints);  
 
@@ -138,6 +175,7 @@ void TRAJECTORY_GENERATOR::GetWaypoints(){
 void TRAJECTORY_GENERATOR::waypointsCallback(const nav_msgs::Path &msg){
     
     vector<Eigen::Vector3d> wp_list;
+    Eigen::Vector3d start_posi(0, 0, 1);
     wp_list.clear();
 
     for (int k = 0; k < (int)msg.poses.size(); k++)
@@ -149,7 +187,8 @@ void TRAJECTORY_GENERATOR::waypointsCallback(const nav_msgs::Path &msg){
 
     //add the original point
     MatrixXd waypoints(wp_list.size() + 1, 3);  
-    waypoints.row(0) = odom_pos;
+   // waypoints.row(0) = odom_pos;
+    waypoints.row(0) = start_posi;
 
     ros::Rate loop_rate(100);
     for(int k = 1; k <= (int)wp_list.size(); k++){

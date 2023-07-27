@@ -7,6 +7,10 @@ SET(CMAKE_BUILD_TYPE "Debug")
 SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
 SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
+
+find_package(Eigen3 REQUIRED)
+find_package(PCL 1.7 REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   quadrotor_msgs
@@ -24,6 +28,8 @@ include_directories(
   SYSTEM
   ${catkin_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/include
+  ${Eigen3_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 add_executable(odom_fusion_node

@@ -4,26 +4,79 @@
 void ODOM_FUSION::init(ros::NodeHandle& nh){
 
     odom_fusion_pub = nh.advertise<nav_msgs::Odometry>("/fusion/odom", 50);
+    test_odom_pub   = nh.advertise<nav_msgs::Odometry>("/fusion/test_odom", 50);
+
+    PX4_yaw_pub = nh.advertise<std_msgs::Float64>("/px4_debug_yaw", 10);
+    T265_yaw_pub = nh.advertise<std_msgs::Float64>("/t265_debug_yaw", 10);
+
     odom_sub        = nh.subscribe("odom", 100, &ODOM_FUSION::OdomCallback, this, ros::TransportHints().tcpNoDelay());
+
+    px4_imu_sub     = nh.subscribe("/mavros/imu/data", 100, &ODOM_FUSION::PX4IMUCallback, this, ros::TransportHints().tcpNoDelay());
+
+
+    test_odom_timer = nh.createTimer(ros::Duration(0.5), &ODOM_FUSION::test_odomCallback, this);
     std::thread rtk_thread(&ODOM_FUSION::readLaser, this);
     rtk_thread.detach();                                            //分离线程在后台运行
 }
 
+void ODOM_FUSION::PX4IMUCallback(const sensor_msgs::ImuConstPtr msg){
+    Eigen::Quaterniond q;
+
+    q.x() = msg->orientation.x;
+    q.y() = msg->orientation.y;
+    q.z() = msg->orientation.z;
+    q.w() = msg->orientation.w;
+    double yaw = atan2(2 * (q.x()*q.y() + q.w()*q.z()), q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z());
+
+    std_msgs::Float64 yaw_msg;
+    yaw_msg.data = yaw;
+
+    PX4_yaw_pub.publish(yaw_msg);
+
+
+
+
+}
+
+
+void ODOM_FUSION::test_odomCallback(const ros::TimerEvent &e){
+    test_odom_pub.publish(odom_data);
+}  
+
 void ODOM_FUSION::OdomCallback(const nav_msgs::OdometryConstPtr msg){
+
+    Eigen::Quaterniond q;
+
+    q.x() = msg->pose.pose.orientation.x;
+    q.y() = msg->pose.pose.orientation.y;
+    q.z() = msg->pose.pose.orientation.z;
+    q.w() = msg->pose.pose.orientation.w;
+    double yaw = atan2(2 * (q.x()*q.y() + q.w()*q.z()), q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z()); 
+
+    std_msgs::Float64 yaw_msg;
+    yaw_msg.data = yaw;
+
+    T265_yaw_pub.publish(yaw_msg);
+
     if (have_altitude){
         static bool flag = true;
         if (flag){
             ROS_WARN("Get Altitude!");
             flag = false;
         }
-        odom_data = *msg;
-        odom_data.pose.pose.position.z = altitude;
-        odom_fusion_pub.publish(odom_data);
+        /*简单的差值滤波，滤除0这样的异常值*/
+        // double diff = altitude - odom_data.pose.pose.position.z;
+        // if (diff < 0.5){
+            odom_data = *msg;
+            odom_data.pose.pose.position.z = altitude;
+            odom_fusion_pub.publish(odom_data);
+        // }
     }
 }
 
 
 void ODOM_FUSION::readLaser(){
+
     serial::Serial serial_port;
     try
     {
@@ -75,6 +128,7 @@ void ODOM_FUSION::readLaser(){
                 uint16_t distance = (buffer[3] << 8) | buffer[2];
                 altitude = static_cast<float>(distance) / 100.0;  // 距离值以米为单位
                 have_altitude = true;
+                // ROS_WARN("GET!!!!");
                 // 解析强度值
                 // strength = (buffer[5] << 8) | buffer[4];
 
