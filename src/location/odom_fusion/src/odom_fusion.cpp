@@ -32,10 +32,7 @@ void ODOM_FUSION::PX4IMUCallback(const sensor_msgs::ImuConstPtr msg){
     yaw_msg.data = yaw;
 
     PX4_yaw_pub.publish(yaw_msg);
-
-
-
-
+    
 }
 
 
@@ -64,13 +61,14 @@ void ODOM_FUSION::OdomCallback(const nav_msgs::OdometryConstPtr msg){
             ROS_WARN("Get Altitude!");
             flag = false;
         }
-        /*简单的差值滤波，滤除0这样的异常值*/
-        // double diff = altitude - odom_data.pose.pose.position.z;
-        // if (diff < 0.5){
-            odom_data = *msg;
+        odom_data = *msg;
+        if (altitude == 0){
+            odom_data.pose.pose.position.z = tmp_altitude;
+        }else{
             odom_data.pose.pose.position.z = altitude;
-            odom_fusion_pub.publish(odom_data);
-        // }
+            tmp_altitude = altitude;
+        }
+        odom_fusion_pub.publish(odom_data);
     }
 }
 
@@ -112,6 +110,7 @@ void ODOM_FUSION::readLaser(){
 
     ros::Rate loop_time(100);
     while(ros::ok()){
+        
         if(serial_port.available()){
             uint8_t buffer[9];
             size_t bytes_read = serial_port.read(buffer, 9);
@@ -128,10 +127,8 @@ void ODOM_FUSION::readLaser(){
                 uint16_t distance = (buffer[3] << 8) | buffer[2];
                 altitude = static_cast<float>(distance) / 100.0;  // 距离值以米为单位
                 have_altitude = true;
-                // ROS_WARN("GET!!!!");
                 // 解析强度值
                 // strength = (buffer[5] << 8) | buffer[4];
-
                 // // 解析温度值
                 // int16_t temperature = (buffer[7] << 8) | buffer[6];
                 // temperature_c = static_cast<float>(temperature) / 8.0 - 256.0;  // 温度值以摄氏度为单位

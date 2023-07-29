@@ -15,6 +15,27 @@ public:
 		double KAngR, KAngP, KAngY;
 	};
 
+	struct PositionGain
+	{
+		double Kpx, Kpy, Kpz;
+		double Kix, Kiy, Kiz;
+		double Kdx, Kdy, Kdz;
+	};
+
+
+	struct DualControl{
+		/*位置环参数*/
+		double pos_Kpx, pos_Kpy, pos_Kpz;
+		double pos_Kix, pos_Kiy, pos_Kiz;
+		double pos_Kdx, pos_Kdy, pos_Kdz;
+
+		/*速度环参数*/
+		double vel_Kpx, vel_Kpy, vel_Kpz;
+		double vel_Kix, vel_Kiy, vel_Kiz;
+		double vel_Kdx, vel_Kdy, vel_Kdz;
+	};
+
+
 	struct RotorDrag
 	{
 		double x, y, z;
@@ -57,7 +78,9 @@ public:
 		double speed;
 	};
 
+	DualControl dual_control;
 	Gain gain;
+	PositionGain position_gain;
 	RotorDrag rt_drag;
 	MsgTimeout msg_timeout;
 	RCReverse rc_reverse;
@@ -74,6 +97,8 @@ public:
 
 	bool use_bodyrate_ctrl;
 	// bool print_dbg;
+
+	int control_method;
 
 	Parameter_t();
 	void config_from_ros_handle(const ros::NodeHandle &nh);

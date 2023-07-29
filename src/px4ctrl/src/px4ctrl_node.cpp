@@ -21,6 +21,8 @@ int main(int argc, char *argv[])
 
     // Controller controller(param);
     LinearControl controller(param);
+
+
     PX4CtrlFSM fsm(param, controller);
 
     ros::Subscriber state_sub =

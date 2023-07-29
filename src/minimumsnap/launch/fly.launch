@@ -5,7 +5,7 @@
 
     <!-- 规划器参数 -->
     <param name="planning/vel"       value="0.3"  />
-    <param name="planning/acc"       value="1.0"  />
+    <param name="planning/acc"       value="1"  />
     <param name="planning/dev_order" value="4"    />
     <param name="planning/min_order" value="3"    />
     <param name="vis/vis_traj_width" value="0.05" />
@@ -20,7 +20,7 @@
     <param name="pillar2_z" value="1" type="double" />
 
     <!-- 控制超前参数 -->
-    <param name="time_forward" value="1.0" type="double" />
+    <param name="time_forward" value="1.2" type="double" />
 
   </node>
 

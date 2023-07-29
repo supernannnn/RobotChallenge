@@ -12,7 +12,9 @@ double LinearControl::fromQuaternion2yaw(Eigen::Quaterniond q)
 
 LinearControl::LinearControl(Parameter_t &param) : param_(param)
 {
+  dual_loop_controller = DualLoopPIDController(param);
   resetThrustMapping();
+  p_pre = Eigen::Vector3d::Zero();
 }
 
 /* 
@@ -24,31 +26,110 @@ LinearControl::calculateControl(const Desired_State_t &des,
     const Imu_Data_t &imu, 
     Controller_Output_t &u)
 {
-  /* WRITE YOUR CODE HERE */
-      //compute disired acceleration
-      Eigen::Vector3d des_acc(0.0, 0.0, 0.0);
-      Eigen::Vector3d Kp,Kv;
-      Kp << param_.gain.Kp0, param_.gain.Kp1, param_.gain.Kp2;
-      Kv << param_.gain.Kv0, param_.gain.Kv1, param_.gain.Kv2;
-      des_acc = des.a + Kv.asDiagonal() * (des.v - odom.v) + Kp.asDiagonal() * (des.p - odom.p);
-      des_acc += Eigen::Vector3d(0,0,param_.gra);
 
-      u.thrust = computeDesiredCollectiveThrustSignal(des_acc);
-      double roll,pitch,yaw,yaw_imu;
-      double yaw_odom = fromQuaternion2yaw(odom.q);
-      double sin = std::sin(yaw_odom);
-      double cos = std::cos(yaw_odom);
-      roll = (des_acc(0) * sin - des_acc(1) * cos )/ param_.gra;
-      pitch = (des_acc(0) * cos + des_acc(1) * sin )/ param_.gra;
-      // yaw = fromQuaternion2yaw(des.q);
-      yaw_imu = fromQuaternion2yaw(imu.q);
-      // Eigen::Quaterniond q = Eigen::AngleAxisd(yaw,Eigen::Vector3d::UnitZ())
-      //   * Eigen::AngleAxisd(roll,Eigen::Vector3d::UnitX())
-      //   * Eigen::AngleAxisd(pitch,Eigen::Vector3d::UnitY());
-      Eigen::Quaterniond q = Eigen::AngleAxisd(des.yaw,Eigen::Vector3d::UnitZ())
-        * Eigen::AngleAxisd(pitch,Eigen::Vector3d::UnitY())
-        * Eigen::AngleAxisd(roll,Eigen::Vector3d::UnitX());
-      u.q = imu.q * odom.q.inverse() * q;
+  Eigen::Vector3d des_acc(0.0, 0.0, 0.0);
+
+  /****************************双闭环串级PID控制器******************************/
+  if (param_.control_method == DUALLOOP) {
+    current_time = ros::Time::now();
+    double dt = (current_time - prev_time).toSec();
+    des_acc = dual_loop_controller.computeControlSignal(des.p, odom.p, odom.v, dt);
+    prev_time = current_time;
+  }
+  /***************************************************************************/
+
+
+  /*****************数字PID****************/
+  if (param_.control_method == PID) {
+    Eigen::Vector3d posiERR = des.p - odom.p;
+    double q0_x = param_.position_gain.Kpx + param_.position_gain.Kix + param_.position_gain.Kdx;
+    double q1_x = -(param_.position_gain.Kpx) - 2 * param_.position_gain.Kdx;
+    double q2_x = param_.position_gain.Kdx;
+
+    double q0_y = param_.position_gain.Kpy + param_.position_gain.Kiy + param_.position_gain.Kdy;
+    double q1_y = -(param_.position_gain.Kpy) - 2 * param_.position_gain.Kdy;
+    double q2_y = param_.position_gain.Kdy;
+
+    double q0_z = param_.position_gain.Kpz + param_.position_gain.Kiz + param_.position_gain.Kdz;
+    double q1_z = -(param_.position_gain.Kpz) - 2 * param_.position_gain.Kdz;
+    double q2_z = param_.position_gain.Kdz;
+
+    u_k_x = q0_x * posiERR(0) + b_k_1_x;
+
+    b_k_x = u_k_x + q1_x * posiERR(0) + q2_x * err_k_1_x;
+
+    err_k_1_x = posiERR(0);
+
+    b_k_1_x = b_k_x;
+
+
+    u_k_y = q0_y * posiERR(1) + b_k_1_y;
+
+    b_k_y = u_k_y + q1_y * posiERR(1) + q2_y * err_k_1_y;
+
+    err_k_1_y = posiERR(1);
+
+    b_k_1_y = b_k_y;    
+
+
+    u_k_z = q0_z * posiERR(2) + b_k_1_z;
+
+    b_k_z = u_k_z + q1_z * posiERR(2) + q2_z * err_k_1_z;
+
+    err_k_1_z = posiERR(2);
+
+    b_k_1_z = b_k_z; 
+
+    Eigen::Vector3d PositionControl(u_k_x, u_k_y, u_k_z);
+
+    des_acc = PositionControl;
+  }
+
+  /**************************************************/
+
+
+  /****************************位置速度P控制器**********************************/
+  if (param_.control_method == PV) {
+    Eigen::Vector3d Kp,Kv;
+    Kp << param_.gain.Kp0, param_.gain.Kp1, param_.gain.Kp2;
+    Kv << param_.gain.Kv0, param_.gain.Kv1, param_.gain.Kv2;
+
+    current_time = ros::Time::now();
+    double dt = (current_time - prev_time).toSec();
+
+    des_acc = des.a + Kv.asDiagonal() * (des.v - (odom.p - p_pre) / dt) + Kp.asDiagonal() * (des.p - odom.p);
+    p_pre = odom.p;
+	  prev_time = current_time;  
+}
+  /***************************************************************************/
+
+  
+  des_acc += Eigen::Vector3d(0,0,param_.gra);
+
+  u.thrust = computeDesiredCollectiveThrustSignal(des_acc);
+  double roll,pitch,yaw,yaw_imu;
+  double yaw_odom = fromQuaternion2yaw(odom.q);
+  double sin = std::sin(yaw_odom);
+  double cos = std::cos(yaw_odom);
+
+
+  debug_msg_.des_a_x = des_acc(0);
+  debug_msg_.des_a_y = des_acc(1);
+  debug_msg_.des_a_z = des_acc(2);
+  
+  
+
+  roll = (des_acc(0) * sin - des_acc(1) * cos )/ param_.gra;
+  pitch = (des_acc(0) * cos + des_acc(1) * sin )/ param_.gra;
+  // yaw = fromQuaternion2yaw(des.q);
+  yaw_imu = fromQuaternion2yaw(imu.q);
+  // Eigen::Quaterniond q = Eigen::AngleAxisd(yaw,Eigen::Vector3d::UnitZ())
+  //   * Eigen::AngleAxisd(roll,Eigen::Vector3d::UnitX())
+  //   * Eigen::AngleAxisd(pitch,Eigen::Vector3d::UnitY());
+  Eigen::Quaterniond q = Eigen::AngleAxisd(des.yaw,Eigen::Vector3d::UnitZ())
+    * Eigen::AngleAxisd(pitch,Eigen::Vector3d::UnitY())
+    * Eigen::AngleAxisd(roll,Eigen::Vector3d::UnitX());
+  u.q = imu.q * odom.q.inverse() * q;
 
 
   /* WRITE YOUR CODE HERE */
@@ -58,14 +139,11 @@ LinearControl::calculateControl(const Desired_State_t &des,
   // debug_msg_.des_p_y = des.p(1);
   // debug_msg_.des_p_z = des.p(2);
   
-  debug_msg_.des_v_x = des.v(0);
-  debug_msg_.des_v_y = des.v(1);
+  debug_msg_.des_v_x = roll;
+  debug_msg_.des_v_y = pitch;
   debug_msg_.des_v_z = des.v(2);
   
-  debug_msg_.des_a_x = des_acc(0);
-  debug_msg_.des_a_y = des_acc(1);
-  debug_msg_.des_a_z = des_acc(2);
-  
+
   debug_msg_.des_q_x = u.q.x();
   debug_msg_.des_q_y = u.q.y();
   debug_msg_.des_q_z = u.q.z();

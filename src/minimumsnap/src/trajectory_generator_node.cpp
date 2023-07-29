@@ -89,82 +89,83 @@ void TRAJECTORY_GENERATOR::GetWaypoints(){
     geometry_msgs::PoseStamped pt;
     pt.pose.orientation = tf::createQuaternionMsgFromYaw(0.0);
 
-    // pt.pose.position.x = pillar1(0) - 0.5;
-    // pt.pose.position.y = pillar1(1);
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = pillar1(0);
-    // pt.pose.position.y = pillar1(1) + 0.5;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
-    // pt.pose.position.y = pillar1(1);
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = pillar2(0);
-    // pt.pose.position.y = pillar2(1) - 0.5;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = pillar2(0) + 0.5;
-    // pt.pose.position.y = pillar2(1);
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = pillar2(0);
-    // pt.pose.position.y = pillar2(1) + 0.5;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x =(pillar1(0) + pillar2(0)) / 2;
-    // pt.pose.position.y = pillar1(1);
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = pillar1(0);
-    // pt.pose.position.y = pillar1(1) - 0.5;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt); 
-
-
-    pt.pose.position.x = 1;
-    pt.pose.position.y = 0;
+    pt.pose.position.x = pillar1(0) - 0.5;
+    pt.pose.position.y = pillar1(1);
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = 1.5;
-    pt.pose.position.y = -0.5;
+    pt.pose.position.x = pillar1(0);
+    pt.pose.position.y = pillar1(1) + 0.5;
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = 2;
-    pt.pose.position.y = -1;
+    pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
+    pt.pose.position.y = pillar1(1);
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = 3;
-    pt.pose.position.y = 0;
+    pt.pose.position.x = pillar2(0);
+    pt.pose.position.y = pillar2(1) - 0.5;
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = 2;
-    pt.pose.position.y = 1;
+    pt.pose.position.x = pillar2(0) + 0.5;
+    pt.pose.position.y = pillar2(1);
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-
-    pt.pose.position.x = 1;
-    pt.pose.position.y = 0;
+    pt.pose.position.x = pillar2(0);
+    pt.pose.position.y = pillar2(1) + 0.5;
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = 2;
-    pt.pose.position.y = -1;
+    pt.pose.position.x =(pillar1(0) + pillar2(0)) / 2;
+    pt.pose.position.y = pillar1(1);
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
+
+    pt.pose.position.x = pillar1(0);
+    pt.pose.position.y = pillar1(1) - 0.5;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt); 
+
+  
+
+    // pt.pose.position.x = 1;
+    // pt.pose.position.y = 0;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = 1.5;
+    // pt.pose.position.y = -0.5;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = 2;
+    // pt.pose.position.y = -1;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = 3;
+    // pt.pose.position.y = 0;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = 2;
+    // pt.pose.position.y = 1;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+
+    // pt.pose.position.x = 1;
+    // pt.pose.position.y = 0;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = 2;
+    // pt.pose.position.y = -1;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
 
     waypointsCallback(waypoints);  
 

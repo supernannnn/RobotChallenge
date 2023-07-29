@@ -32,6 +32,9 @@ private:
     nav_msgs::Odometry odom_data;
     bool flag;
     bool have_altitude;
+
+    double tmp_altitude;
+
     void readLaser();
     void OdomCallback(const nav_msgs::OdometryConstPtr msg);
     void PX4IMUCallback(const sensor_msgs::ImuConstPtr msg);
@@ -39,6 +42,7 @@ private:
 public:
     ODOM_FUSION(){
         have_altitude = false;
+        tmp_altitude = 0;
     }
     ~ODOM_FUSION(){}
     void init(ros::NodeHandle& nh);
