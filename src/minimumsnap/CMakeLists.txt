@@ -41,7 +41,7 @@ include_directories(
 add_executable(trajectory_generator_node 
 	src/trajectory_generator_node.cpp
   src/trajectory_generator_waypoint.cpp
-  src/control_cmd.cpp
+  src/control_cmd_FSM.cpp
 )
 
 

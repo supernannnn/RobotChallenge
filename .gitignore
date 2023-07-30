@@ -4,3 +4,6 @@ devel/
 
 #Vscode
 .vscode
+
+#rosbag
+shellFiles/*.bag

@@ -12,6 +12,8 @@
 #include "input.h"
 #include <Eigen/Dense>
 
+using std::queue;
+
 /*控制器选择*/
 enum CONTROL_METHOD{
 	PID = 1,
@@ -178,6 +180,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
+    queue<double> filter_win;
 	ros::Time prev_time;
     ros::Time current_time; 
     Eigen::Vector3d p_pre;
@@ -191,8 +194,13 @@ private:
 	double thr2acc_;
 	double P_;
 
+    double max_window_len;
+
 	double computeDesiredCollectiveThrustSignal(const Eigen::Vector3d &des_acc);
 	double fromQuaternion2yaw(Eigen::Quaterniond q);
+
+    double smoothfilter(queue<double>& filter_win, double data);
+
 };
 
 

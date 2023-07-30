@@ -62,6 +62,7 @@ void ODOM_FUSION::OdomCallback(const nav_msgs::OdometryConstPtr msg){
             flag = false;
         }
         odom_data = *msg;
+        odom_data.header.frame_id = "world";
         if (altitude == 0){
             odom_data.pose.pose.position.z = tmp_altitude;
         }else{

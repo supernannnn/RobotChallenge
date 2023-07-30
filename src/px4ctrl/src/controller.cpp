@@ -3,6 +3,21 @@
 using namespace std;
 
 
+double LinearControl::smoothfilter(queue<double>& filter_win, double data) {
+  filter_win.push(data);
+
+  if (filter_win.size() == max_window_len) {
+    filter_win.pop();
+  }
+  auto tmp_queue = filter_win;
+  double sum = 0.0;
+  while (!tmp_queue.empty()){
+    sum += tmp_queue.front();
+    tmp_queue.pop();
+  } 
+  return sum / filter_win.size();
+}
+
 
 double LinearControl::fromQuaternion2yaw(Eigen::Quaterniond q)
 {
@@ -15,6 +30,7 @@ LinearControl::LinearControl(Parameter_t &param) : param_(param)
   dual_loop_controller = DualLoopPIDController(param);
   resetThrustMapping();
   p_pre = Eigen::Vector3d::Zero();
+  max_window_len = 5;
 }
 
 /* 
@@ -103,7 +119,6 @@ LinearControl::calculateControl(const Desired_State_t &des,
 }
   /***************************************************************************/
 
-  
   des_acc += Eigen::Vector3d(0,0,param_.gra);
 
   u.thrust = computeDesiredCollectiveThrustSignal(des_acc);
@@ -112,12 +127,22 @@ LinearControl::calculateControl(const Desired_State_t &des,
   double sin = std::sin(yaw_odom);
   double cos = std::cos(yaw_odom);
 
+  /****对z轴的控制量进行异常值滤波****/
+  double tmp_acc_z = des_acc(2);
+  static double pre_acc = des_acc(2);
+  if (abs(pre_acc - 9.81) < 1 &&  abs(tmp_acc_z - pre_acc) > 2.5) {
+      tmp_acc_z = pre_acc;
+  }else {
+    tmp_acc_z = smoothfilter(filter_win, des_acc(2));
+    pre_acc = tmp_acc_z;
+  }
+  des_acc(2) = tmp_acc_z;
+  /*******************************/
 
   debug_msg_.des_a_x = des_acc(0);
   debug_msg_.des_a_y = des_acc(1);
   debug_msg_.des_a_z = des_acc(2);
-  
-  
+
 
   roll = (des_acc(0) * sin - des_acc(1) * cos )/ param_.gra;
   pitch = (des_acc(0) * cos + des_acc(1) * sin )/ param_.gra;

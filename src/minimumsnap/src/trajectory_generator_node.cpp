@@ -28,6 +28,10 @@ void TRAJECTORY_GENERATOR::init(ros::NodeHandle& nh){
 
     nh.param("time_forward", time_forward_, -1.0);
 
+    nh.param("radius", radius, 0.5);
+
+    nh.param("eight_times", eight_times, 1);
+
     //调用PlanningVisualization构造函数进行初始化
     trajVisual_.reset(new PlanningVisualization(nh));
     //柱子可视化
@@ -37,10 +41,12 @@ void TRAJECTORY_GENERATOR::init(ros::NodeHandle& nh){
 
     trajPath_pub    = nh.advertise<nav_msgs::Path>("trajectory", 10);
     controlCmd_pub  = nh.advertise<quadrotor_msgs::PositionCommand>("/position_cmd", 50);
+    land_pub        = nh.advertise<quadrotor_msgs::TakeoffLand>("/px4ctrl/takeoff_land", 1);
 
     
     ControlCmdCallback_Timer = nh.createTimer(ros::Duration(0.01), &TRAJECTORY_GENERATOR::ControlCmdCallback, this);
     Transformer_Timer        = nh.createTimer(ros::Duration(0.01), &TRAJECTORY_GENERATOR::TransformerCallback, this);
+    FSM_Timer                = nh.createTimer(ros::Duration(0.01), &TRAJECTORY_GENERATOR::ControlFSM, this);
     GetWaypoints();
 }
 
@@ -89,83 +95,155 @@ void TRAJECTORY_GENERATOR::GetWaypoints(){
     geometry_msgs::PoseStamped pt;
     pt.pose.orientation = tf::createQuaternionMsgFromYaw(0.0);
 
-    pt.pose.position.x = pillar1(0) - 0.5;
+    // pt.pose.position.x = pillar1(0) - radius;
+    // pt.pose.position.y = pillar1(1);
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar1(0) - radius / 2;
+    // pt.pose.position.y = pillar1(1) + radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar1(0);
+    // pt.pose.position.y = pillar1(1) + radius;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = (3 * pillar1(0) + pillar2(0)) / 4;
+    // pt.pose.position.y = (pillar1(1) + 3 * pillar2(1)) / 4 + radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
+    // pt.pose.position.y = (pillar1(1) + pillar2(1)) / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = (pillar1(0) + 3 * pillar2(0)) / 4;
+    // pt.pose.position.y = (pillar1(1) + 3 * pillar2(1)) / 4 - radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar2(0);
+    // pt.pose.position.y = pillar2(1) - radius;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar2(0) + radius / 2;
+    // pt.pose.position.y = pillar2(1) - radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar2(0) + radius;
+    // pt.pose.position.y = pillar2(1);
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar2(0) + radius / 2;
+    // pt.pose.position.y = pillar2(1) + radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar2(0);
+    // pt.pose.position.y = pillar2(1) + radius;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = (pillar1(0) + 3 * pillar2(0)) / 4;
+    // pt.pose.position.y = (pillar1(1) + 3 * pillar2(1)) / 4 + radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
+    // pt.pose.position.y = (pillar1(1) + pillar2(1)) / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = (3 * pillar1(0) + pillar2(0)) / 4;
+    // pt.pose.position.y = (3 * pillar1(1) + pillar2(1)) / 4 - radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar1(0);
+    // pt.pose.position.y = pillar1(1) - radius;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt); 
+
+    // pt.pose.position.x = pillar1(0) - radius / 2;
+    // pt.pose.position.y = pillar1(1) - radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = pillar1(0) - radius;
+    // pt.pose.position.y = pillar1(1);
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+
+
+    pt.pose.position.x = pillar1(0) - radius - 0.5;
     pt.pose.position.y = pillar1(1);
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
+
 
     pt.pose.position.x = pillar1(0);
-    pt.pose.position.y = pillar1(1) + 0.5;
+    pt.pose.position.y = pillar1(1) + radius;
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
+
 
     pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
-    pt.pose.position.y = pillar1(1);
+    pt.pose.position.y = (pillar1(1) + pillar2(1)) / 2;
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
+
 
     pt.pose.position.x = pillar2(0);
-    pt.pose.position.y = pillar2(1) - 0.5;
+    pt.pose.position.y = pillar2(1) - radius;
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = pillar2(0) + 0.5;
+
+    pt.pose.position.x = pillar2(0) + radius;
     pt.pose.position.y = pillar2(1);
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
+
     pt.pose.position.x = pillar2(0);
-    pt.pose.position.y = pillar2(1) + 0.5;
+    pt.pose.position.y = pillar2(1) + radius;
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x =(pillar1(0) + pillar2(0)) / 2;
+    // pt.pose.position.x = (pillar1(0) + 3 * pillar2(0)) / 4;
+    // pt.pose.position.y = (pillar1(1) + 3 * pillar2(1)) / 4 + radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    pt.pose.position.x = (pillar1(0) + pillar2(0)) / 2;
+    pt.pose.position.y = (pillar1(1) + pillar2(1)) / 2;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt);
+
+    // pt.pose.position.x = (3 * pillar1(0) + pillar2(0)) / 4;
+    // pt.pose.position.y = (3 * pillar1(1) + pillar2(1)) / 4 - radius / 2;
+    // pt.pose.position.z = 1;
+    // waypoints.poses.push_back(pt);
+
+    pt.pose.position.x = pillar1(0);
+    pt.pose.position.y = pillar1(1) - radius;
+    pt.pose.position.z = 1;
+    waypoints.poses.push_back(pt); 
+
+
+
+    pt.pose.position.x = pillar1(0) - radius - 0.5;
     pt.pose.position.y = pillar1(1);
     pt.pose.position.z = 1;
     waypoints.poses.push_back(pt);
 
-    pt.pose.position.x = pillar1(0);
-    pt.pose.position.y = pillar1(1) - 0.5;
-    pt.pose.position.z = 1;
-    waypoints.poses.push_back(pt); 
-
-  
-
-    // pt.pose.position.x = 1;
-    // pt.pose.position.y = 0;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = 1.5;
-    // pt.pose.position.y = -0.5;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = 2;
-    // pt.pose.position.y = -1;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = 3;
-    // pt.pose.position.y = 0;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = 2;
-    // pt.pose.position.y = 1;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-
-    // pt.pose.position.x = 1;
-    // pt.pose.position.y = 0;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
-
-    // pt.pose.position.x = 2;
-    // pt.pose.position.y = -1;
-    // pt.pose.position.z = 1;
-    // waypoints.poses.push_back(pt);
 
     waypointsCallback(waypoints);  
 
@@ -187,13 +265,13 @@ void TRAJECTORY_GENERATOR::waypointsCallback(const nav_msgs::Path &msg){
     }
 
     //add the original point
-    MatrixXd waypoints(wp_list.size() + 1, 3);  
+    MatrixXd waypoints(wp_list.size(), 3);  
    // waypoints.row(0) = odom_pos;
-    waypoints.row(0) = start_posi;
+    // waypoints.row(0) = start_posi;
 
     ros::Rate loop_rate(100);
     for(int k = 1; k <= (int)wp_list.size(); k++){
-        waypoints.row(k) = wp_list[k - 1];
+        waypoints.row(k - 1) = wp_list[k - 1];
         waypoints_visual.push_back(wp_list[k - 1]);
         loop_rate.sleep();
     }
@@ -214,24 +292,22 @@ void TRAJECTORY_GENERATOR::trajGeneration(Eigen::MatrixXd& path){
 
     // use "trapezoidal velocity" time allocation
     ros::Time time_start = ros::Time::now();
-    _polyTime  = timeAllocation(path);
+    auto _polyTime  = timeAllocation(path);
     // generate a minimum-jerk/snap piecewise monomial polynomial-based trajectory
-    _polyCoeff = trajectoryGeneratorWaypoint.PolyQPGeneration(_dev_order, path, vel, acc, _polyTime);
+    auto _polyCoeff = trajectoryGeneratorWaypoint.PolyQPGeneration(_dev_order, path, vel, acc, _polyTime);
     Traj = MiniSnapTraj(time_start, _polyTime, _polyCoeff);
     ros::Time time_end = ros::Time::now();
     ROS_WARN("Time consumed in trajectory generation is %f ms", (time_end - time_start).toSec() * 1000.0); 
     ROS_WARN("The duration of trajectory is %f s", Traj.time_duration); 
 
-    is_complete_Traj = true;
+    
     //轨迹可视化
-    getVisual(_polyCoeff, _polyTime);
-    //发布轨迹到rviz进行可视化
-    trajVisual_->displayTraj(traj);
-
+    getVisual(_polyCoeff, _polyTime, Traj);
+    is_complete_Traj = true;
 }
 
 
-void TRAJECTORY_GENERATOR::getVisual(Eigen::MatrixXd& polyCoeff, Eigen::VectorXd& time){
+void TRAJECTORY_GENERATOR::getVisual(Eigen::MatrixXd& polyCoeff, Eigen::VectorXd& time, MiniSnapTraj& trajectory){
     double traj_len = 0.0;
     int count = 1;
     Eigen::Vector3d cur, pre, vel;
@@ -243,9 +319,9 @@ void TRAJECTORY_GENERATOR::getVisual(Eigen::MatrixXd& polyCoeff, Eigen::VectorXd
     poses.pose.orientation     = tf::createQuaternionMsgFromYaw(0.0);
 
     ros::Rate loop_rate(1000);
-    for(double t = 0.0; t < Traj.time_duration; t += 0.01, count++)   // go through each segment
+    for(double t = 0.0; t < trajectory.time_duration; t += 0.01, count++)   // go through each segment
     {   
-        auto info = getTrajInfo(Traj, t);
+        auto info = getTrajInfo(trajectory, t);
         cur = info.first;
         vel = info.second;
         poses.pose.position.x = cur[0];
@@ -259,8 +335,8 @@ void TRAJECTORY_GENERATOR::getVisual(Eigen::MatrixXd& polyCoeff, Eigen::VectorXd
         pre = cur;
         loop_rate.sleep();
     }
-    
-    ROS_WARN("Trajectory length is %f m", traj_len);
+    //发布轨迹到rviz进行可视化
+    trajVisual_->displayTraj(traj);
 }
 
 Eigen::VectorXd TRAJECTORY_GENERATOR::timeAllocation(Eigen::MatrixXd& Path){

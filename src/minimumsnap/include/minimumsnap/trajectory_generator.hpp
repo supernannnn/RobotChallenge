@@ -21,6 +21,7 @@
 
 #include <quadrotor_msgs/PolynomialTrajectory.h>
 #include <quadrotor_msgs/PositionCommand.h>
+#include <quadrotor_msgs/TakeoffLand.h>
 
 #include <sensor_msgs/Joy.h>
 #include <algorithm>
@@ -38,6 +39,17 @@
 
 using namespace std;
 using namespace Eigen;
+
+
+
+/*任务状态*/
+enum STATE{
+    INIT = 0,                       //初始化
+    WAIT_TAKE_OFF_FINISHED ,     //等待起飞完成              
+    FLY_TO_STRAT,                   //飞向起点
+    FOLLOW_TRAJECTORY,              //执行轨迹跟踪
+    LANDING                         //降落
+};
 
 
 struct MiniSnapTraj{
@@ -72,8 +84,6 @@ private:
     int _dev_order, _min_order;
 
     int _poly_num1D;
-    MatrixXd _polyCoeff;
-    VectorXd _polyTime;
 
     Vector3d _startPos  = Vector3d::Zero();
     Vector3d _startVel  = Vector3d::Zero();
@@ -85,26 +95,39 @@ private:
     Eigen::Vector3d pillar1    = Vector3d::Zero();
     Eigen::Vector3d pillar2    = Vector3d::Zero();
 
+    //八字banjing
+    double radius;
+
     ros::Timer ControlCmdCallback_Timer;
     ros::Timer Transformer_Timer;
+    ros::Timer FSM_Timer;
     tf::TransformBroadcaster broadcaster;
 
+    /*状态机当前状态*/
+    int state;
 
+    MiniSnapTraj Traj_start;
     MiniSnapTraj Traj;
-    vector<Eigen::Vector3d> traj;
+    vector<Eigen::Vector3d> traj, start_traj;
     vector<Eigen::Vector3d> waypoints_visual;
     PlanningVisualization::Ptr trajVisual_;
     nav_msgs::Path trajPath;
     ros::Publisher trajPath_pub;
     ros::Publisher controlCmd_pub;
+    ros::Publisher land_pub;
     ros::Subscriber odom_sub;
     Eigen::Vector3d odom_pos;
     bool has_odom;
+    bool finished_trajectory, finish_start_trajectory, eight_follow_finished;
+    int tra_id;
+    int eight_times;
     quadrotor_msgs::PositionCommand posiCmd;
 
-    bool is_complete_Traj;
+    bool is_complete_Traj, is_complete_Start_Traj;
     double last_yaw_, last_yaw_dot_;
     double time_forward_;
+    
+    bool is_land;
 
     //通过柱子坐标得到轨迹的waypoints
     void GetWaypoints();
@@ -122,10 +145,10 @@ private:
     std::pair<Eigen::Vector3d, Eigen::Vector3d>  getTrajInfo(const MiniSnapTraj& traj, double t);
 
     //根据多项式系数和时间分配得到三维坐标点
-    void getVisual(Eigen::MatrixXd& polyCoeff, Eigen::VectorXd& time);
+    void getVisual(Eigen::MatrixXd& polyCoeff, Eigen::VectorXd& time, MiniSnapTraj& trajectory);
 
     //轨迹三维坐标点得到轨迹每个点的偏航角
-    std::pair<double, double> calculate_yaw(double t_cur, Eigen::Vector3d &pos, ros::Time &time_now, ros::Time &time_last);
+    std::pair<double, double> calculate_yaw(double t_cur, Eigen::Vector3d &pos, ros::Time &time_now, ros::Time &time_last, MiniSnapTraj& trajectory);
    
     void ControlCmdCallback(const ros::TimerEvent &e);
 
@@ -134,11 +157,26 @@ private:
     /*TF树坐标变换关系*/
     void TransformerCallback(const ros::TimerEvent &e);
 
+    /*控制状态机*/
+    void ControlFSM(const ros::TimerEvent &e);
+
+    /*根据轨迹解析控制指令*/
+    void ControlParse(MiniSnapTraj& trajectory, ros::Time start_time, bool init, bool& finished);
+
+    inline double Distance_of_waypoints(Eigen::Vector3d& Point1, Eigen::Vector3d& Point2);
+
 
 public:
     TRAJECTORY_GENERATOR(/* argvs */){
         is_complete_Traj = false;
         has_odom = false;
+        is_complete_Start_Traj = false;
+        state = INIT;
+        finished_trajectory = false;
+        finish_start_trajectory = false;
+        is_land = false;
+        eight_follow_finished = false;
+        tra_id = 0;
     }
     ~TRAJECTORY_GENERATOR(){
 
@@ -146,7 +184,12 @@ public:
     void init(ros::NodeHandle& nh);
 };
 
-
+inline double TRAJECTORY_GENERATOR::Distance_of_waypoints(Eigen::Vector3d& Point1, Eigen::Vector3d& Point2) {
+    double x_diff = Point2.x() - Point1.x();
+    double y_diff = Point2.y() - Point1.y();
+    double z_diff = Point2.z() - Point1.z();
+    return std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
+}
 
 
 class TRAJECTORY_GENERATOR_WAYPOINT  
